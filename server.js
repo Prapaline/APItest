@@ -5,19 +5,27 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get('/action', (req, res) => {
-  const gameStateRaw = req.headers['x-game-state'];
+app.get('/', (req, res) => {
+  res.send('Hello, Render!');
+});
 
-  if (!gameStateRaw) {
-    return res.status(400).json({ error: 'Missing game state' });
+app.get('/action', (req, res) => {
+  const rawState = req.headers['x-game-state'];
+  if (!rawState) {
+    return res.status(400).json({ error: 'Missing X-Game-State header' });
   }
 
   let gameState;
   try {
-    gameState = JSON.parse(gameStateRaw);
+    gameState = JSON.parse(rawState);
   } catch (e) {
     return res.status(400).json({ error: 'Invalid JSON in X-Game-State' });
   }
 
-  res.json({ move: 'STAY', action: 'NONE' });
+  res.json({ move: 'UP', action: 'COLLECT' });
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
