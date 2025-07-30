@@ -32,9 +32,96 @@ app.get('/action', (req, res) => {
 
     console.log('📦 Reçu GameState :', gameState);
 
+    const botX = gameState.you.x;
+    const botY = gameState.you.y;
+    const points = gameState.points;
+    const bombs = gameState.grid.flatMap((row, y) =>
+        row.map((cell, x) => ({ x, y, hasBomb: cell.bombs && cell.bombs.length > 0 }))
+    ).filter(cell => cell.hasBomb);
+
+    let bestMove = 'STAY';
+    let action = 'NONE';
+
+    const isOnPoint = points.some(p => p.x === botX && p.y === botY);
+    if (isOnPoint) {
+        action = 'COLLECT';
+        return res.json({ move: bestMove, action: action });
+    }
+
+    let closestPoint = null;
+    let minDistance = Infinity;
+
+    for (const point of points) {
+        const isPointOnBomb = bombs.some(b => b.x === point.x && b.y === point.y);
+        if (isPointOnBomb) {
+            continue;
+        }
+
+        const distance = Math.abs(point.x - botX) + Math.abs(point.y - botY);
+        if (distance < minDistance) {
+            closestPoint = point;
+            minDistance = distance;
+        }
+    }
+
+    if (closestPoint) {
+        let targetX = closestPoint.x;
+        let targetY = closestPoint.y;
+
+        if (botX < targetX) {
+            if (!bombs.some(b => b.x === botX + 1 && b.y === botY)) {
+                bestMove = 'RIGHT';
+            } else if (botY < targetY) {
+                if (!bombs.some(b => b.x === botX && b.y === botY + 1)) {
+                    bestMove = 'DOWN';
+                }
+            } else if (botY > targetY) {
+                if (!bombs.some(b => b.x === botX && b.y === botY - 1)) {
+                    bestMove = 'UP';
+                }
+            }
+        } else if (botX > targetX) {
+            if (!bombs.some(b => b.x === botX - 1 && b.y === botY)) {
+                bestMove = 'LEFT';
+            } else if (botY < targetY) {
+                if (!bombs.some(b => b.x === botX && b.y === botY + 1)) {
+                    bestMove = 'DOWN';
+                }
+            } else if (botY > targetY) {
+                if (!bombs.some(b => b.x === botX && b.y === botY - 1)) {
+                    bestMove = 'UP';
+                }
+            }
+        } else if (botY < targetY) {
+            if (!bombs.some(b => b.x === botX && b.y === botY + 1)) {
+                bestMove = 'DOWN';
+            } else if (botX < targetX) {
+                if (!bombs.some(b => b.x === botX + 1 && b.y === botY)) {
+                    bestMove = 'RIGHT';
+                }
+            } else if (botX > targetX) {
+                if (!bombs.some(b => b.x === botX - 1 && b.y === botY)) {
+                    bestMove = 'LEFT';
+                }
+            }
+        } else if (botY > targetY) {
+            if (!bombs.some(b => b.x === botX && b.y === botY - 1)) {
+                bestMove = 'UP';
+            } else if (botX < targetX) {
+                if (!bombs.some(b => b.x === botX + 1 && b.y === botY)) {
+                    bestMove = 'RIGHT';
+                }
+            } else if (botX > targetX) {
+                if (!bombs.some(b => b.x === botX - 1 && b.y === botY)) {
+                    bestMove = 'LEFT';
+                }
+            }
+        }
+    }
+
     res.json({
-        move: 'STAY',
-        action: 'NONE'
+        move: bestMove,
+        action: action
     });
 });
 
