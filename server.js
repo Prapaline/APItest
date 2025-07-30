@@ -8,7 +8,7 @@ app.get('/', (req, res) => {
   res.send('Hello, Express!');
 });
 
-app.post('/action', (req, res) => {
+app.get('/action', (req, res) => {
   const gameState = req.body;
   const response = {
     move: "UP",
