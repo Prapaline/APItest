@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+console.log('🔵 Server is starting...');
 
 const app = express();
 app.use(cors({
@@ -17,16 +18,25 @@ app.get('/', (req, res) => {
 });
 
 app.get('/action', (req, res) => {
-  const gameState = req.body;
-    console.log('X-Game-State:', req.headers['x-game-state']);
+  console.log('🟡 /action called');
+  const rawState = req.headers['x-game-state'];
+  console.log('📦 Received X-Game-State:', rawState);
 
-  const response = {
-    move: "UP",
-    action: "COLLECT"
-  };
+  if (!rawState) {
+    return res.status(400).json({ error: 'Missing X-Game-State header' });
+  }
 
-  res.json(response);
+  try {
+    const gameState = JSON.parse(rawState);
+    console.log('✅ Parsed game state:', gameState);
+
+    return res.json({ move: 'UP', action: 'ATTACK' });
+  } catch (err) {
+    console.error('❌ JSON parsing failed:', err.message);
+    return res.status(400).json({ error: 'Invalid JSON in X-Game-State' });
+  }
 });
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
